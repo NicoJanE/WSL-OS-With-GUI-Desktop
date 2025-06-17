@@ -1,0 +1,1 @@
+Instructions for setting up a WSL distribution with a graphical desktop using X11 forwarding to the host, in combination with XLaunch

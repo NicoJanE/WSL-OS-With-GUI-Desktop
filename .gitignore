@@ -1,0 +1,6 @@
+# Ignore these
+_release.txt
+_ongithub
+_start.md
+*.tar
+*.tar.gz
