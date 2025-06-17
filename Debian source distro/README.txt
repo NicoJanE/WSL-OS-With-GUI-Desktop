@@ -1,1 +1,0 @@
-Instruction for upgrade to Debian 12 can be found in the file "Create-wsl-desktop.md"
