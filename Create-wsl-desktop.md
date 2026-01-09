@@ -1,6 +1,6 @@
 # 1. Create a WSL Image with a GUI Desktop
 
->⚠️ **WARNING**: This procedure was designed for **Windows 11 22H2 and early builds (and probably early 23H2 builds**. 
+>⚠️ **WARNING**: This procedure was initial designed for **Windows 11 22H2 and early builds (and probably early 23H2 builds**) Fix for Windows 11 25H2 available 
 >
 >Starting with **Windows 11 24H2/25H2**, Microsoft's built-in **WSLg** (GUI support) has become more deeply integrated into WSL2, making it harder to disable and >potentially causing interference with external X11 servers. 
 >
