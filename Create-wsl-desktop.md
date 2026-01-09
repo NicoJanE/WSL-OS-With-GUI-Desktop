@@ -165,6 +165,7 @@ dbus-launch --exit-with-session mate-session
 Use this script and update the line `-screen 3840x2160 \ ` to match your screen resolution. Note that fullscreen mode does not work properly, and creating a window smaller than your maximum screen size may also cause issues. If you resize the window, font scaling (DPI) may become incorrect.
 
 ```
+
 #!/bin/bash
 
 echo "Starting MATE desktop (fixed for Win11 23H2+)"
@@ -193,6 +194,20 @@ sleep 1
 
 # Step 2: switch to nested display
 export DISPLAY=:1
+
+# Make sure we can install applications under sudo
+# ADDED: Create script to fix DISPLAY in all terminals
+mkdir -p ~/.config
+cat > ~/.config/fix-display.sh << 'EOF'
+#!/bin/bash
+export DISPLAY=:1
+xhost +local: 2>/dev/null
+EOF
+chmod +x ~/.config/fix-display.sh
+
+# Make sure we can install applications under sudo
+# Auto-run on terminal open
+echo 'export DISPLAY=:1' >> ~/.bashrc
 
 xrdb -merge <<EOF
 Xft.dpi: 96
@@ -229,6 +244,7 @@ killall dbus-daemon 2>/dev/null
 rm -f /tmp/dbus-* 2>/dev/null
 eval "$(dbus-launch --sh-syntax --exit-with-session)"
 
+xhost +local: 2>/dev/null
 
 # Create minimal MATE session config
 mkdir -p ~/.config/autostart
@@ -240,6 +256,18 @@ Exec=/bin/true
 Hidden=true
 NoDisplay=true
 X-MATE-Autostart-enabled=false
+EOF
+
+# Make sure we can install applications under sudo
+# Auto-fix DISPLAY on MATE startup
+cat > ~/.config/autostart/fix-display.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=Fix DISPLAY
+Exec=/bin/bash -c "export DISPLAY=:1; xhost +local:"
+Hidden=true
+NoDisplay=true
+X-MATE-Autostart-enabled=true
 EOF
 
 # Disable power manager, screensaver
