@@ -6,9 +6,12 @@
 >
 >**Note**: WSLg remains unsuitable for this use case because it **still does not support full desktop environments in a single window**—it only launches individual >applications. Therefore, X11 forwarding is still required, but now works against the system's architecture rather than with it.
 >
->**Recommendation**: This method may become increasingly unreliable with future Windows updates. Test thoroughly and expect potential conflicts.
-
-
+>
+> CURRENT FIX for Windows 11 25H2
+> This fix was generated with AI and may not be the cleanest solution, but it works for now:
+> 1. In section 2.1 "Install the Windows Manager", make sure xephyr is installed and the installation line is uncommented.
+> 2. You **must** start XLaunch on the Windows host with Display:0 (see section 2.4.2).
+> 3. The script has been updated; see **2.5.2 Script for Windows 11 25H2**.
 
 This document describes how to create a Linux WSL image with a GUI desktop, forwarding the output to an X11 server on the host. Note that we use the **X11 protocol**, not WSLg, because WSLg does not support running a full desktop GUI in a single window. Instead, WSLg opens each Linux application in its own window. This X11-based setup behaves more like a virtual machine, but with proper resolution support (unlike Hyper-V under Windows 11).
 
@@ -57,6 +60,7 @@ sudo apt install mate-terminal
 sudo apt install nano
 sudo apt install dbus
 sudo dbus-daemon --system
+# sudo apt install -y xserver-xephyr  # USE THIS FOR Windows 11 25H2 
 ```
 
 ## 2.2 Create user
@@ -107,7 +111,7 @@ Then, configure Polkit to support shutdown and user permissions. Create the file
 ```
 Make the file executable: - `chmod +x ~/.config/autostart/polkit-mate-authentication-agent-1.desktop`
 
-## 2.4 Start the **MATE** Desktop
+## 2.4.1 Start the **MATE** Desktop (Windows 11 22H2/23H2)
 
 Start XLaunch on the host with the following options:
   - Display in a large window
@@ -125,7 +129,11 @@ You can also run individual MATE apps such as:
   - caja
   - pluma
 
-## 2.5  startup script
+## 2.4.2 Start the **MATE** Desktop (Windows 11 25H2)
+
+Same as above but make sure to use **DISPLAY:0**! 
+
+## 2.5.1  startup script  (Windows 11 22H2/23H2)
 
 Create ~/start-mate.sh:
 
@@ -148,6 +156,100 @@ dbus-launch --exit-with-session mate-session
 # For this script: chmod +x ~/start-mate.sh
 
 ```
+
+## 2.5.2  startup script (Windows 11 25H2)
+
+Use this script and update the line `-screen 3840x2160 \ ` to match your screen resolution. Note that fullscreen mode does not work properly, and creating a window smaller than your maximum screen size may also cause issues. If you resize the window, font scaling (DPI) may become incorrect.
+
+```
+#!/bin/bash
+
+echo "Starting MATE desktop (fixed for Win11 23H2+)"
+
+# Fix /tmp permissions (WSL2 issue)
+sudo mkdir -p /tmp/.X11-unix /tmp/.ICE-unix
+sudo chmod 1777 /tmp/.X11-unix /tmp/.ICE-unix
+sudo chown root:root /tmp/.X11-unix /tmp/.ICE-unix
+
+# Step 1: connect to XLaunch
+export DISPLAY=:0
+
+# Kill any existing Xephyr
+pkill -9 Xephyr 2>/dev/null
+
+# Start Xephyr with fixed large window (moveable, not resizeable)
+Xephyr :1 \
+  -screen 3840x2160 \
+  -dpi 96 \
+  -ac \
+  -noreset \
+  -extension MIT-SHM &
+sleep 2
+
+# Step 2: switch to nested display
+export DISPLAY=:1
+
+# Force DPI settings
+xrdb -merge <<EOF
+Xft.dpi: 96
+Xft.autohint: 0
+Xft.lcdfilter: lcddefault
+Xft.hintstyle: hintfull
+Xft.hinting: 1
+Xft.antialias: 1
+Xft.rgba: rgb
+EOF
+
+# Complete session environment
+export XDG_SESSION_TYPE=x11
+export XDG_CURRENT_DESKTOP=MATE
+export DESKTOP_SESSION=mate
+export XDG_SESSION_DESKTOP=mate
+export XDG_SESSION_CLASS=user
+export XDG_SESSION_ID=$$
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+
+# Disable hardware acceleration
+export LIBGL_ALWAYS_SOFTWARE=1
+export GALLIUM_DRIVER=llvmpipe
+
+# Disable problematic features
+export ALSA_LOG_LEVEL=0
+export G_MESSAGES_DEBUG=none
+export GTK_OVERLAY_SCROLLING=0
+export GTK_USE_PORTAL=0
+
+# Force GDK scaling
+export GDK_SCALE=1
+export GDK_DPI_SCALE=1
+export QT_SCALE_FACTOR=1
+
+# DBus - clean session
+killall dbus-daemon 2>/dev/null
+rm -f /tmp/dbus-* 2>/dev/null
+eval "$(dbus-launch --sh-syntax --exit-with-session)"
+
+# Create minimal MATE session config
+mkdir -p ~/.config/autostart
+cat > ~/.config/autostart/disable-power-manager.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=Disable Power Manager
+Exec=/bin/true
+Hidden=true
+NoDisplay=true
+X-MATE-Autostart-enabled=false
+EOF
+
+# Disable power manager, screensaver
+gsettings set org.mate.power-manager idle-dim-ac false 2>/dev/null
+gsettings set org.mate.screensaver idle-activation-enabled false 2>/dev/null
+
+# Start session
+exec mate-session 2>&1 | grep -v -E "(wnck_set_client_type|unsetenv|portal.desktop.gtk|Module initialization failed)"
+```
+
+
 
 <br>
 
