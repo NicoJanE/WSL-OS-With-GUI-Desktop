@@ -7,11 +7,11 @@
 >**Note**: WSLg remains unsuitable for this use case because it **still does not support full desktop environments in a single window**—it only launches individual >applications. Therefore, X11 forwarding is still required, but now works against the system's architecture rather than with it.
 >
 >
-> CURRENT FIX for Windows 11 25H2
+> **CURRENT FIX for Windows 11 25H2**
 > This fix was generated with AI and may not be the cleanest solution, but it works for now:
 > 1. In section 2.1 "Install the Windows Manager", make sure xephyr is installed and the installation line is uncommented.
 > 2. You **must** start XLaunch on the Windows host with Display:0 (see section 2.4.2).
-> 3. The script has been updated; see **2.5.2 Script for Windows 11 25H2**.
+> 3. The script has been updated; see **2.5.2 Script for Windows 11 25H2**. (see section 2.5.2)
 
 This document describes how to create a Linux WSL image with a GUI desktop, forwarding the output to an X11 server on the host. Note that we use the **X11 protocol**, not WSLg, because WSLg does not support running a full desktop GUI in a single window. Instead, WSLg opens each Linux application in its own window. This X11-based setup behaves more like a virtual machine, but with proper resolution support (unlike Hyper-V under Windows 11).
 
