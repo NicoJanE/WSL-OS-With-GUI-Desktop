@@ -186,21 +186,18 @@ Xephyr :1 \
   -dpi 96 \
   -ac \
   -noreset \
-  -extension MIT-SHM &
-sleep 2
+  -extension MIT-SHM  \
+  -host-cursor &
+
+sleep 1
 
 # Step 2: switch to nested display
 export DISPLAY=:1
 
-# Force DPI settings
 xrdb -merge <<EOF
 Xft.dpi: 96
-Xft.autohint: 0
-Xft.lcdfilter: lcddefault
-Xft.hintstyle: hintfull
 Xft.hinting: 1
 Xft.antialias: 1
-Xft.rgba: rgb
 EOF
 
 # Complete session environment
@@ -232,6 +229,7 @@ killall dbus-daemon 2>/dev/null
 rm -f /tmp/dbus-* 2>/dev/null
 eval "$(dbus-launch --sh-syntax --exit-with-session)"
 
+
 # Create minimal MATE session config
 mkdir -p ~/.config/autostart
 cat > ~/.config/autostart/disable-power-manager.desktop << 'EOF'
@@ -250,6 +248,7 @@ gsettings set org.mate.screensaver idle-activation-enabled false 2>/dev/null
 
 # Start session
 exec mate-session 2>&1 | grep -v -E "(wnck_set_client_type|unsetenv|portal.desktop.gtk|Module initialization failed)"
+
 ```
 
 
