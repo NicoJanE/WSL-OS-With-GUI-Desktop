@@ -1,20 +1,33 @@
 # 1. Create a WSL Image with a GUI Desktop
+<br>
 
->⚠️ **WARNING**: This procedure was initial designed for **Windows 11 22H2 and early builds (and probably early 23H2 builds**) Fix for Windows 11 25H2 available 
+>
+> ⚠️ **WARNING**  
+> This procedure was originally designed for **Windows 11 22H2**(and likely early **23H2** builds). Starting with **Windows 11 25H2**, additional compatibility steps are required and are documented below.
 >
 >Starting with **Windows 11 24H2/25H2**, Microsoft's built-in **WSLg** (GUI support) has become more deeply integrated into WSL2, making it harder to disable and >potentially causing interference with external X11 servers. 
 >
->**Note**: WSLg remains unsuitable for this use case because it **still does not support full desktop environments in a single window**—it only launches individual >applications. Therefore, X11 forwarding is still required, but now works against the system's architecture rather than with it.
+> **Note**: WSLg remains unsuitable for this use case because it **does not support full desktop environments in a single window**—it only launches individual applications. Therefore, X11 forwarding is still required, and on Windows 11 25H2 it may conflict with the system’s architecture. This issue is resolved by using **Xephyr**.
 >
 >
-> **CURRENT FIX for Windows 11 25H2**
-> This fix was generated with AI and may not be the cleanest solution, but it works for now:
-> 1. In section 2.1 "Install the Windows Manager", make sure xephyr is installed and the installation line is uncommented.
-> 2. You **must** start XLaunch on the Windows host with Display:0 (see section 2.4.2).
-> 3. The script has been updated; see **2.5.2 Script for Windows 11 25H2**. (see section 2.5.2)
+> **STEPS TO FIX Windows 11 25H2 BEHAVIOR:**
+> 1. In section 2.1 "Install the Windows Manager", ensure **Xephyr** is installed and the corresponding installation line is uncommented.
+> 2. Start **XLaunch** on the Windows host with **Display:0**; see section 2.4.2.
+> 3. Use the updated script for Windows 11 25H2; see section **2.5.2**.
+> <br>
 >
-> Todo\Improve: Create separated instruction for Windows 11 (25H2)
+>>***Xephyr — Conceptual Overview*** <br>
+>> <sub> - Xephyr runs inside WSL as a **nested X server** that presents itself to XLaunch as a **normal X client window**. </sub> <br>
+>> <sub> - From Windows’ perspective, Xephyr is just a regular window managed by XLaunch (this is the reason why this works on Windows 11 25H2). </sub> <br>
+>> <sub> - Inside that window, Xephyr provides a complete, Linux-compatible X server, allowing a full desktop environment to run without Windows interfering with
+>> root-window or X11 semantics.</sub>
+> <br>
 >
+> <sub> Todo: Create separated instruction for Windows 11 (25H2) </sub>
+
+
+
+<br> <br>
 
 This document describes how to create a Linux WSL image with a GUI desktop, forwarding the output to an X11 server on the host. Note that we use the **X11 protocol**, not WSLg, because WSLg does not support running a full desktop GUI in a single window. Instead, WSLg opens each Linux application in its own window. This X11-based setup behaves more like a virtual machine, but with proper resolution support (unlike Hyper-V under Windows 11).
 
